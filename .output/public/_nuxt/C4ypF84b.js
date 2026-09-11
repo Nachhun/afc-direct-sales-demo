@@ -1,1 +1,0 @@
-import{p as e,E as t,y as s,k as n,I as o}from"./aoQ69IEx.js";const a={class:"p-6 text-center text-slate-500 font-bold"},d=e({__name:"delivery-settings",setup(i){return t(()=>{s("/admin/settings")}),(c,r)=>(o(),n("div",a," Redirecting to system settings... "))}});export{d as default};
