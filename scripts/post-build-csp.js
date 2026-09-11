@@ -56,13 +56,13 @@ for (const publicDir of candidateDirs) {
     }
   }
 
-  // Ensure _nuxt/app-init.js ALWAYS exists in THIS output directory with the matching current buildId
+  // Ensure _nuxt/app-init.js ALWAYS exists with safe runtime config and NO mismatched buildId
   const nuxtDir = path.join(publicDir, '_nuxt');
   if (!fs.existsSync(nuxtDir)) {
     fs.mkdirSync(nuxtDir, { recursive: true });
   }
-  const finalContent = `window.__NUXT__=window.__NUXT__||{};window.__NUXT__.config=window.__NUXT__.config||{public:{apiBase:"/api",allowBrowser:true},app:{baseURL:"/",buildId:${JSON.stringify(currentBuildId)},buildAssetsDir:"/_nuxt/",cdnURL:""}};`;
+  const finalContent = 'window.__NUXT__=window.__NUXT__||{};window.__NUXT__.config=window.__NUXT__.config||{public:{apiBase:"/api",allowBrowser:true},app:{baseURL:"/",buildAssetsDir:"/_nuxt/",cdnURL:""}};';
   fs.writeFileSync(path.join(nuxtDir, 'app-init.js'), finalContent, 'utf-8');
-  console.log(`[post-build-csp] Successfully ensured ${path.join(nuxtDir, 'app-init.js')} (buildId: ${currentBuildId}) exists across ${htmlFiles.length} HTML files.`);
+  console.log(`[post-build-csp] Successfully ensured ${path.join(nuxtDir, 'app-init.js')} exists across ${htmlFiles.length} HTML files.`);
 }
 
