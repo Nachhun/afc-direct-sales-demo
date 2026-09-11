@@ -1,0 +1,1 @@
+import{p as o,$ as i,E as n,y as s}from"./aoQ69IEx.js";const r=o({__name:"index",setup(a){const e=i();return n(()=>{e.loadFromStorage(),e.isLoggedIn?e.isAdmin?s("/admin"):e.isDelivery?s("/delivery"):e.isAsm?s("/asm"):s("/order/new"):s("/login")}),()=>{}}});export{r as default};

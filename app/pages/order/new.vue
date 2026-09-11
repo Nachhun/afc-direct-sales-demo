@@ -72,21 +72,9 @@
 
         <!-- Customer Info -->
         <div :class="[cardClass, 'p-3.5 sm:p-6 space-y-4']">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-2 pb-2.5 border-b border-slate-100">
-             <div class="flex items-center gap-2">
-                <div class="w-1 h-4 bg-blue-600 rounded-full"></div>
-                <h3 class="text-[11px] text-blue-600 uppercase font-black tracking-[0.2em]">Customer Information</h3>
-             </div>
-
-             <!-- Location Check Reminder Banner (No yellow border, larger motion avatar & bold text) -->
-             <div class="flex items-center gap-3 bg-white rounded-2xl px-3.5 py-2 shadow-sm border border-slate-100">
-              <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden shrink-0 bg-white shadow-xs">
-                <img src="/helo.gif" alt="Motion Avatar" class="w-full h-full object-contain p-0.5 rounded-full bg-white" />
-              </div>
-               <span class="text-sm sm:text-base font-black text-rose-600 animate-bounce leading-snug tracking-tight inline-block">
-                 កំភ្លេច ពិនិត្យមើល ទីតាំងមុន submit.
-               </span>
-             </div>
+          <div class="flex items-center gap-2 mb-2 pb-2.5 border-b border-slate-100">
+             <div class="w-1 h-4 bg-blue-600 rounded-full"></div>
+             <h3 class="text-[11px] text-blue-600 uppercase font-black tracking-[0.2em]">Customer Information</h3>
           </div>
 
           <!-- Auto-Filled Store & Main Location Banner (New Compact Style) -->
