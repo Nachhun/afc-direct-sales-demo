@@ -1,1 +1,1 @@
-window.__NUXT__={};window.__NUXT__.config={public:{apiBase:"/api",allowBrowser:true},app:{baseURL:"/",buildId:"280cdc3b-b4b9-48b8-b126-ee867aed0e1f",buildAssetsDir:"/_nuxt/",cdnURL:""}}
+window.__NUXT__=window.__NUXT__||{};window.__NUXT__.config=window.__NUXT__.config||{public:{apiBase:"/api",allowBrowser:true},app:{baseURL:"/",buildId:"d4a059db-6744-482c-8a59-743091942b41",buildAssetsDir:"/_nuxt/",cdnURL:""}};

@@ -27,21 +27,20 @@ function findHtmlFiles(dir) {
   return results;
 }
 
-let initScriptContent = '';
-
-// Check if an existing app-init.js exists in any output directory
+// Extract real current buildId from builds/latest.json
+let currentBuildId = '';
 for (const dir of candidateDirs) {
-  const existingAppInit = path.join(dir, '_nuxt/app-init.js');
-  if (fs.existsSync(existingAppInit)) {
+  const latestJsonPath = path.join(dir, '_nuxt/builds/latest.json');
+  if (fs.existsSync(latestJsonPath)) {
     try {
-      initScriptContent = fs.readFileSync(existingAppInit, 'utf-8');
-      if (initScriptContent) break;
+      const data = JSON.parse(fs.readFileSync(latestJsonPath, 'utf-8'));
+      if (data.id) {
+        currentBuildId = data.id;
+        break;
+      }
     } catch {}
   }
 }
-
-// Fallback safe definition if none extracted yet
-const fallbackInit = 'window.__NUXT__=window.__NUXT__||{};window.__NUXT__.config=window.__NUXT__.config||{public:{apiBase:"/api",allowBrowser:true},app:{baseURL:"/",buildAssetsDir:"/_nuxt/",cdnURL:""}};';
 
 for (const publicDir of candidateDirs) {
   if (!fs.existsSync(publicDir)) continue;
@@ -52,21 +51,18 @@ for (const publicDir of candidateDirs) {
     const match = content.match(/<script>(window\.__NUXT__=\{[\s\S]*?)<\/script>/);
     if (match) {
       const rawTag = match[0];
-      const scriptCode = match[1];
-      if (!initScriptContent) {
-        initScriptContent = scriptCode;
-      }
       content = content.replace(rawTag, '<script src="/_nuxt/app-init.js"></script>');
       fs.writeFileSync(filePath, content, 'utf-8');
     }
   }
 
-  // Ensure _nuxt/app-init.js ALWAYS exists in THIS output directory
+  // Ensure _nuxt/app-init.js ALWAYS exists in THIS output directory with the matching current buildId
   const nuxtDir = path.join(publicDir, '_nuxt');
   if (!fs.existsSync(nuxtDir)) {
     fs.mkdirSync(nuxtDir, { recursive: true });
   }
-  const finalContent = initScriptContent || fallbackInit;
+  const finalContent = `window.__NUXT__=window.__NUXT__||{};window.__NUXT__.config=window.__NUXT__.config||{public:{apiBase:"/api",allowBrowser:true},app:{baseURL:"/",buildId:${JSON.stringify(currentBuildId)},buildAssetsDir:"/_nuxt/",cdnURL:""}};`;
   fs.writeFileSync(path.join(nuxtDir, 'app-init.js'), finalContent, 'utf-8');
-  console.log(`[post-build-csp] Successfully ensured ${path.join(nuxtDir, 'app-init.js')} exists across ${htmlFiles.length} HTML files.`);
+  console.log(`[post-build-csp] Successfully ensured ${path.join(nuxtDir, 'app-init.js')} (buildId: ${currentBuildId}) exists across ${htmlFiles.length} HTML files.`);
 }
+
