@@ -66,3 +66,28 @@ for (const publicDir of candidateDirs) {
   console.log(`[post-build-csp] Successfully ensured ${path.join(nuxtDir, 'app-init.js')} exists across ${htmlFiles.length} HTML files.`);
 }
 
+// Synchronize all files between .output/public and .vercel/output/static
+const outputPublic = path.resolve(__dirname, '../.output/public');
+const vercelStatic = path.resolve(__dirname, '../.vercel/output/static');
+
+function copyFolderRecursive(src, dest) {
+  if (!fs.existsSync(src)) return;
+  if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
+  const entries = fs.readdirSync(src, { withFileTypes: true });
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+    if (entry.isDirectory()) {
+      copyFolderRecursive(srcPath, destPath);
+    } else {
+      fs.copyFileSync(srcPath, destPath);
+    }
+  }
+}
+
+if (fs.existsSync(outputPublic)) {
+  copyFolderRecursive(outputPublic, vercelStatic);
+  console.log('[post-build-csp] Successfully mirrored .output/public to .vercel/output/static');
+}
+
+

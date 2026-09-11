@@ -26,12 +26,17 @@ export default defineNuxtConfig({
   },
 
   nitro: {
+    preset: 'static',
     devProxy: {
       '/api': {
         target: process.env.NUXT_PUBLIC_API_URL || 'https://d-order.apratifoods.asia/api',
         changeOrigin: true,
       }
     }
+  },
+
+  experimental: {
+    appManifest: false,
   },
 
   app: {
