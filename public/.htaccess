@@ -1,0 +1,63 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # 🛑 BLOCK NULL BYTE & PATH CONFUSION INJECTIONS
+  RewriteCond %{THE_REQUEST} (%00|\x00|%2500) [NC]
+  RewriteRule .* - [F,L]
+
+  # Force HTTPS
+  RewriteCond %{HTTPS} off
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # 🛑 ROUTE ROOT SCANNER PROBES (.env, .git, wp-*, phpmyadmin, etc.) TO API DEFENSE SHIELD
+  RewriteRule ^(\.env.*|\.git.*|\.aws.*|\.ssh.*|\.htaccess|\.config|wp-login\.php|wp-admin.*|phpmyadmin.*|pma.*|adminer.*|actuator.*|solr.*|eval-stdin.*|setup\.php|install\.php|phpinfo.*|docker-compose.*) api/v1/shield-probe?target=$1 [L,QSA,E=NO_VERBOSE_HEADERS:1]
+
+  # STOP Nuxt from handling anything in the /api folder
+  RewriteRule ^api - [L,E=NO_VERBOSE_HEADERS:1]
+
+  # Standard Nuxt SPA Routing
+  RewriteRule ^index\.html$ - [L]
+  
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . index.html [L]
+</IfModule>
+
+# Gzip / Brotli Compression
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/x-javascript application/json application/xml image/svg+xml
+</IfModule>
+
+# Cache Control for Static Nuxt Chunks
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/css "access plus 1 month"
+  ExpiresByType application/javascript "access plus 1 month"
+  ExpiresByType text/javascript "access plus 1 month"
+  ExpiresByType image/png "access plus 1 month"
+  ExpiresByType image/jpeg "access plus 1 month"
+  ExpiresByType image/svg+xml "access plus 1 month"
+  ExpiresByType font/woff2 "access plus 1 month"
+</IfModule>
+
+# Security Headers (Suppressed on API & Scanner Probes for clean curl output)
+<IfModule mod_headers.c>
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-XSS-Protection "1; mode=block"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin" env=!NO_VERBOSE_HEADERS
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" env=!NO_VERBOSE_HEADERS
+  Header always set Cross-Origin-Opener-Policy "same-origin-allow-popups" env=!NO_VERBOSE_HEADERS
+  Header always set Cross-Origin-Resource-Policy "cross-origin" env=!NO_VERBOSE_HEADERS
+  Header always set Cross-Origin-Embedder-Policy "credentialless" env=!NO_VERBOSE_HEADERS
+  Header always set Permissions-Policy "camera=(), microphone=(), payment=(), geolocation=(self)" env=!NO_VERBOSE_HEADERS
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' https://telegram.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https: api.iconify.design *.tile.openstreetmap.org *.basemaps.cartocdn.com *.arcgisonline.com server.arcgisonline.com services.arcgisonline.com *.google.com *.googleapis.com mt0.google.com mt1.google.com mt2.google.com mt3.google.com d-order.apratifoods.asia www.nbc.gov.kh; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https: wss: d-order.apratifoods.asia *.apratifoods.asia:* api.iconify.design *.tile.openstreetmap.org nominatim.openstreetmap.org router.project-osrm.org www.nbc.gov.kh; frame-src 'self' https://telegram.org; object-src 'none'; base-uri 'self'; upgrade-insecure-requests;" env=!NO_VERBOSE_HEADERS
+</IfModule>
+
+# Prevent directory listing
+Options -Indexes
+
+# Ensure index.html is the default
+DirectoryIndex index.html
+
