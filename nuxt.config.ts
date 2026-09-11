@@ -21,7 +21,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       apiBase: process.env.NUXT_PUBLIC_API_BASE || '/api',
-      allowBrowser: process.env.NUXT_PUBLIC_ALLOW_BROWSER === 'true' || process.env.NODE_ENV === 'development',
+      allowBrowser: true,
     }
   },
 
@@ -45,6 +45,10 @@ export default defineNuxtConfig({
         { rel: 'icon', type: 'image/png', href: '/logo.png' }
       ],
       script: [
+        {
+          innerHTML: 'window.__NUXT__ = window.__NUXT__ || {}; window.__NUXT__.config = window.__NUXT__.config || { public: { apiBase: "/api", allowBrowser: true }, app: { baseURL: "/", buildAssetsDir: "/_nuxt/", cdnURL: "" } };',
+          type: 'text/javascript',
+        },
         { 
           src: '/telegram-web-app.js', 
           defer: false

@@ -4,7 +4,12 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const publicDir = path.resolve(__dirname, '../.output/public');
+
+// Target both standard Nuxt output and Vercel build output
+const candidateDirs = [
+  path.resolve(__dirname, '../.output/public'),
+  path.resolve(__dirname, '../.vercel/output/static'),
+];
 
 function findHtmlFiles(dir) {
   let results = [];
@@ -22,30 +27,46 @@ function findHtmlFiles(dir) {
   return results;
 }
 
-const htmlFiles = findHtmlFiles(publicDir);
 let initScriptContent = '';
 
-for (const filePath of htmlFiles) {
-  let content = fs.readFileSync(filePath, 'utf-8');
-  const match = content.match(/<script>(window\.__NUXT__=\{[\s\S]*?)<\/script>/);
-  if (match) {
-    const rawTag = match[0];
-    const scriptCode = match[1];
-    if (!initScriptContent) {
-      initScriptContent = scriptCode;
-    }
-    content = content.replace(rawTag, '<script src="/_nuxt/app-init.js"></script>');
-    fs.writeFileSync(filePath, content, 'utf-8');
+// Check if an existing app-init.js exists in any output directory
+for (const dir of candidateDirs) {
+  const existingAppInit = path.join(dir, '_nuxt/app-init.js');
+  if (fs.existsSync(existingAppInit)) {
+    try {
+      initScriptContent = fs.readFileSync(existingAppInit, 'utf-8');
+      if (initScriptContent) break;
+    } catch {}
   }
 }
 
-if (initScriptContent) {
+// Fallback safe definition if none extracted yet
+const fallbackInit = 'window.__NUXT__=window.__NUXT__||{};window.__NUXT__.config=window.__NUXT__.config||{public:{apiBase:"/api",allowBrowser:true},app:{baseURL:"/",buildAssetsDir:"/_nuxt/",cdnURL:""}};';
+
+for (const publicDir of candidateDirs) {
+  if (!fs.existsSync(publicDir)) continue;
+
+  const htmlFiles = findHtmlFiles(publicDir);
+  for (const filePath of htmlFiles) {
+    let content = fs.readFileSync(filePath, 'utf-8');
+    const match = content.match(/<script>(window\.__NUXT__=\{[\s\S]*?)<\/script>/);
+    if (match) {
+      const rawTag = match[0];
+      const scriptCode = match[1];
+      if (!initScriptContent) {
+        initScriptContent = scriptCode;
+      }
+      content = content.replace(rawTag, '<script src="/_nuxt/app-init.js"></script>');
+      fs.writeFileSync(filePath, content, 'utf-8');
+    }
+  }
+
+  // Ensure _nuxt/app-init.js ALWAYS exists in THIS output directory
   const nuxtDir = path.join(publicDir, '_nuxt');
   if (!fs.existsSync(nuxtDir)) {
     fs.mkdirSync(nuxtDir, { recursive: true });
   }
-  fs.writeFileSync(path.join(nuxtDir, 'app-init.js'), initScriptContent, 'utf-8');
-  console.log(`[post-build-csp] Extracted Nuxt bootstrapping script to /_nuxt/app-init.js across ${htmlFiles.length} HTML files.`);
-} else {
-  console.log('[post-build-csp] No inline window.__NUXT__ script found to externalize.');
+  const finalContent = initScriptContent || fallbackInit;
+  fs.writeFileSync(path.join(nuxtDir, 'app-init.js'), finalContent, 'utf-8');
+  console.log(`[post-build-csp] Successfully ensured ${path.join(nuxtDir, 'app-init.js')} exists across ${htmlFiles.length} HTML files.`);
 }
